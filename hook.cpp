@@ -7,8 +7,8 @@ using namespace hookso;
 
 BEGIN_HOOK(void*, malloc, size_t bla)
 {
-  static const bool enable_prehook = true;
-  static const bool enable_posthook = true;
+  static const bool enable_prehook        = true;
+  static const bool enable_posthook       = true;
   static const bool enable_implementation = false;
 
   inline void prehook(size_t) const {
@@ -25,8 +25,8 @@ void *malloc(size_t size) { return hook_malloc(size); }
 BEGIN_HOOK(int, rand)
 {
   // Config
-  static const bool enable_prehook = false;
-  static const bool enable_posthook = false;
+  static const bool enable_prehook        = false;
+  static const bool enable_posthook       = false;
   static const bool enable_implementation = true;
 
   int count;
