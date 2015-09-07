@@ -7,6 +7,18 @@ extern "C" {
 #  include <dlfcn.h>
 }
 
+#define Q(x) #x
+#define QUOTE(x) Q(x)
+
+#define BEGIN_HOOK(return_type, name, args...)				\
+  static struct Hook_##name : public Hook<Hook_##name, return_type(args)>
+
+#define END_HOOK(return_type, name, args...)				\
+  hook_##name;								\
+  namespace hookso {							\
+  template<> const char *function_name<Hook_##name>() { return #name; }\
+  }
+
 // Check which features are enabled. If the class defines a type called
 // enable_##X it picks that value, otherwise it picks default_value
 #define MAKE_ENABLE_CHECK(X, default_value)				\
@@ -38,6 +50,8 @@ MAKE_ENABLE_CHECK(implementation, true)
 namespace hookso {
   using namespace std;
 
+  template<typename Impl_Type> const char *function_name();
+
   // I order to use function signature (i.e. int &(bool, int) ) as
   // template parameter.
   template<typename Impl_Type, typename Signature>
@@ -53,7 +67,7 @@ namespace hookso {
 
     // Constructor stores a function pointer to the actual function we are overriding
     Hook() {
-      this->fn = reinterpret_cast<Function_T>(dlsym(RTLD_NEXT, Impl_Type::function_name())); 
+      this->fn = reinterpret_cast<Function_T>(dlsym(RTLD_NEXT, function_name<Impl_Type>())); 
     }
     virtual ~Hook() {}
 
