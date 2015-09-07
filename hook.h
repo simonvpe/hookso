@@ -7,9 +7,6 @@ extern "C" {
 #  include <dlfcn.h>
 }
 
-#define Q(x) #x
-#define QUOTE(x) Q(x)
-
 #define BEGIN_HOOK(return_type, name, args...)				\
   static struct Hook_##name : public Hook<Hook_##name, return_type(args)>
 
