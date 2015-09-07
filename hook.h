@@ -7,24 +7,28 @@ extern "C" {
 #  include <dlfcn.h>
 }
 
+// Make specializations of these traits to override default
+// behaviour.
+template<typename Impl_Type>
+struct enable_prehook {
+  static const bool value = true;
+};
+
+template<typename Impl_Type>
+struct enable_posthook {
+  static const bool value = true;
+};
+
+template<typename Impl_Type>
+struct enable_func_override {
+  static const bool value = true;
+};
+
 namespace hookso {
   using namespace std;
 
-  template<typename Impl_Type>
-    struct enable_prehook {
-      static const bool value = true;
-    };
-
-  template<typename Impl_Type>
-    struct enable_posthook {
-      static const bool value = true;
-    };
-
-  template<typename Impl_Type>
-    struct enable_func_override {
-      static const bool value = true;
-    };
-
+  // I order to use function signature (i.e. int &(bool, int) ) as
+  // template parameter.
   template<typename Impl_Type, typename Signature>
     class Hook;
 
@@ -41,10 +45,12 @@ namespace hookso {
       this->fn = reinterpret_cast<Function_T>(dlsym(RTLD_NEXT, Impl_Type::function_name())); 
     }
     virtual ~Hook() {}
+    Hook(const Hook &) = delete;
+    Hook &operator=(const Hook &) = delete;
 
-    auto operator()(Args & ... args) const -> Return_Type {
+    Return_Type operator()(Args & ... args) const {
       prehook(args...);
-      Return_Type ret = original_function(args...);
+      Return_Type ret = func_override(args...);
       posthook(ret);
       return ret;
     }
@@ -74,16 +80,16 @@ namespace hookso {
       reinterpret_cast<const Impl_Type*>(this)->posthook(ret);
     }
     // *************************************************************************************
-    // Return_Type original_function(Args...)
+    // Return_Type func_override(Args...)
     template<typename T = Impl_Type>
       inline typename enable_if< !enable_func_override<T>::value, Return_Type >::type
-      original_function(Args & ... args) const {
+      func_override(Args & ... args) const {
       return const_cast<This_T*>(this)->fn(args...); 
     }
     template<typename T = Impl_Type>
       inline typename enable_if< enable_func_override<T>::value, Return_Type >::type
-      original_function(Args & ... args) const {
-      return reinterpret_cast<Impl_Type*>(const_cast<This_T*>(this))->original_function(args...);
+      func_override(Args & ... args) const {
+      return reinterpret_cast<Impl_Type*>(const_cast<This_T*>(this))->func_override(args...);
     }
     // *************************************************************************************
   };
