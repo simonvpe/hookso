@@ -11,4 +11,4 @@ assembly:
 	gcc ${MAIN_ARGS} -S -o main.asm main.c
 
 run:
-	(LD_PRELOAD=${PWD}/hook.so; ./a.out)
+	LD_PRELOAD=${PWD}/hook.so ./a.out
